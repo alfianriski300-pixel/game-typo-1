@@ -77,6 +77,8 @@ const comboPopup = document.getElementById("combo-popup");
 const bonusBanner = document.getElementById("bonus-banner");
 const gameoverModal = document.getElementById("gameover-modal");
 
+const dangerLine = document.getElementById("danger-line");
+
 let gameState = {
     difficulty: "easy",
     category: "makanan",
@@ -145,11 +147,24 @@ function startGame() {
 
     updateHUD();
 
-    // Kunci tinggi arena sebelum keyboard muncul
-    arena.style.height = "";
-    arena.style.flex = "";
+        // Kunci posisi garis merah sebelum keyboard muncul (khusus HP)
+    dangerLine.style.position = "";
+    dangerLine.style.top = "";
+    dangerLine.style.bottom = "";
+    dangerLine.style.left = "";
+    dangerLine.style.width = "";
 
     switchPage("game");
+
+    if (window.matchMedia("(max-width: 600px)").matches) {
+        const posisiGaris = dangerLine.getBoundingClientRect().top;
+
+        dangerLine.style.position = "fixed";
+        dangerLine.style.top = `${posisiGaris}px`;
+        dangerLine.style.bottom = "auto";
+        dangerLine.style.left = "0";
+        dangerLine.style.width = "100%";
+    }
 
     const tinggiArena = arena.clientHeight;
     arena.style.height = `${tinggiArena}px`;

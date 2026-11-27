@@ -622,20 +622,3 @@ body {
         padding: 8px 10px;
     }
 }
-
-/* Menjaga tinggi permainan saat keyboard HP muncul */
-@media screen and (max-width: 600px) {
-
-    #page-game {
-        height: 100vh;
-        height: 100svh;
-        min-height: 100vh;
-        min-height: 100svh;
-    }
-
-    #game-arena {
-        flex: 1 0 0;
-        min-height: 0;
-    }
-
-}
