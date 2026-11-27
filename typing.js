@@ -70,7 +70,6 @@ const pages = {
 
 const arena = document.getElementById("game-arena");
 const typingInput = document.getElementById("typing-input");
-const dangerLine = document.getElementById("danger-line");
 const livesDisplay = document.getElementById("lives-display");
 const scoreDisplay = document.getElementById("score-display");
 const comboDisplay = document.getElementById("combo-display");
@@ -196,6 +195,39 @@ function scheduleNextWave(isFirstWave = false) {
     gameState.spawnTimers.push(waveTimer);
 }
 
+function scheduleNextWave(isFirstWave = false) {
+    if (!gameState.isRunning) return;
+
+    gameState.waveCount++;
+    let count = 1;
+
+    if (!isFirstWave) {
+        if (gameState.difficulty === "easy") {
+            // Awal 1, selanjutnya bisa 3 sampai 5 berurutan
+            count = gameState.waveCount === 2 ? 3 : randInt(3, 5);
+        } else {
+            // Medium & Hard bisa 5 sampai 7 berurutan
+            count = gameState.waveCount === 2 ? 4 : randInt(5, 7);
+        }
+    }
+
+    // Jeda antar kata dalam satu gelombang agar tidak turun barengan
+    const staggerDelay = gameState.difficulty === "easy" ? 1300 : gameState.difficulty === "medium" ? 1500 : 2100;
+
+    for (let i = 0; i < count; i++) {
+        const timer = setTimeout(() => {
+            if (gameState.isRunning) spawnWord();
+        }, i * staggerDelay);
+        gameState.spawnTimers.push(timer);
+    }
+
+    // Jadwalkan gelombang berikutnya setelah gelombang ini selesai muncul
+    const nextWaveDelay = count * staggerDelay + 1800;
+    const waveTimer = setTimeout(() => {
+        if (gameState.isRunning) scheduleNextWave(false);
+    }, nextWaveDelay);
+    gameState.spawnTimers.push(waveTimer);
+}
 
 function spawnWord() {
     const text = getWord(gameState.difficulty, gameState.category);
@@ -243,7 +275,6 @@ function spawnWord() {
         hadTypo: false
     });
 }
-
 
 // Loop Animasi Turun
 
