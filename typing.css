@@ -504,9 +504,11 @@ body {
     }
 
     /* Garis bahaya */
+    /* Garis bahaya */
     #danger-line {
         height: 5px;
-        bottom: auto;
+        bottom: 0;
+        top: auto;
     }
 
     #danger-line span {
