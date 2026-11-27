@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TYPO GAMES</title>
+    <link rel="stylesheet" href="typing.css" />
+</head>
+
+<body>
+
+    <!-- HALAMAN 1: HOME -->
+    <section id="page-home" class="page active">
+        <div class="center-box">
+            <h1 class="game-title">TYPO<span>GAMES</span></h1>
+            <p class="subtitle">Ketik kata yang jatuh sebelum menyentuh garis merah!</p>
+            <button id="btn-play" class="btn-primary pulse">PLAY</button>
+        </div>
+    </section>
+
+    <!-- HALAMAN 2: PILIH TINGKAT KESULITAN -->
+    <section id="page-difficulty" class="page">
+        <div class="center-box">
+            <h2>Pilih Tingkat Kesulitan</h2>
+            <div class="card-grid">
+                <button class="card-btn diff-btn" data-diff="easy">
+                    <h3>EASY</h3>
+                    <p>1 - 10 Huruf</p>
+                    <span>Jatuh: 4 - 7 detik</span>
+                </button>
+                <button class="card-btn diff-btn" data-diff="medium">
+                    <h3>MEDIUM</h3>
+                    <p>10 - 15 Huruf</p>
+                    <span>Jatuh: 3 - 4 detik</span>
+                </button>
+                <button class="card-btn diff-btn" data-diff="hard">
+                    <h3>HARD</h3>
+                    <p>15 - 20+ Huruf / Kalimat</p>
+                    <span>Jatuh: 3 - 4 detik</span>
+                </button>
+            </div>
+            <button id="btn-back-home" class="btn-secondary">Kembali</button>
+        </div>
+    </section>
+
+    <!-- HALAMAN 3: PILIH KATEGORI -->
+    <section id="page-category" class="page">
+        <div class="center-box">
+            <h2>Pilih Kategori (<span id="selected-diff-label">EASY</span>)</h2>
+            <div class="card-grid">
+                <button class="card-btn cat-btn" data-cat="makanan">Makanan</button>
+                <button class="card-btn cat-btn" data-cat="minuman">Minuman</button>
+                <button class="card-btn cat-btn" data-cat="wilayah">Wilayah</button>
+                <button class="card-btn cat-btn" data-cat="nama">Nama Orang</button>
+                <button class="card-btn cat-btn special" data-cat="acak">Karakter Acak & Campuran</button>
+            </div>
+            <button id="btn-back-diff" class="btn-secondary">Ganti Kesulitan</button>
+        </div>
+    </section>
+
+    <!-- HALAMAN 4: ARENA PERMAINAN -->
+    <section id="page-game" class="page">
+        <header class="hud">
+            <div class="hud-item">
+                <span>NYAWA</span>
+                <div id="lives-display" class="lives">❤️❤️❤️</div>
+            </div>
+            <div class="hud-item">
+                <span>SKOR</span>
+                <div id="score-display" class="score">0</div>
+            </div>
+            <div class="hud-item">
+                <span>COMBO</span>
+                <div id="combo-display" class="combo">0x</div>
+            </div>
+        </header>
+
+        <!-- Arena Kata Jatuh -->
+        <main id="game-arena">
+            <div id="combo-popup" class="combo-popup"></div>
+            <div id="bonus-banner" class="bonus-banner">BONUS 100 POIN! SAPU BERSIH +1 NYAWA!</div>
+
+            <!-- Garis Batas Bawah -->
+            <div id="danger-line">
+                <span>GARIS BATAS</span>
+            </div>
+        </main>
+
+        <!-- Area Input Ketik -->
+        <footer class="input-area">
+            <input type="text" id="typing-input" placeholder="Ketik kata yang jatuh di sini..." autocomplete="off"
+                autocorrect="off" autocapitalize="off" spellcheck="false" />
+        </footer>
+    </section>
+
+    <!-- POPUP GAME OVER -->
+    <div id="gameover-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>GAME OVER</h2>
+            <p>Semua nyawa telah habis!</p>
+            <div class="final-stats">
+                <p>Skor Akhir: <strong id="final-score">0</strong></p>
+                <p>Max Combo: <strong id="final-combo">0x</strong></p>
+            </div>
+            <button id="btn-restart-home" class="btn-primary">Kembali ke Halaman Utama</button>
+        </div>
+    </div>
+
+    <script src="typing.js"></script>
+</body>
+
+</html>
