@@ -506,6 +506,8 @@ body {
     /* Garis bahaya */
     #danger-line {
         height: 5px;
+        top: 50%;
+        bottom: auto;
     }
 
     #danger-line span {

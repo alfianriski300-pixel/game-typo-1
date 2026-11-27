@@ -70,14 +70,13 @@ const pages = {
 
 const arena = document.getElementById("game-arena");
 const typingInput = document.getElementById("typing-input");
+const dangerLine = document.getElementById("danger-line");
 const livesDisplay = document.getElementById("lives-display");
 const scoreDisplay = document.getElementById("score-display");
 const comboDisplay = document.getElementById("combo-display");
 const comboPopup = document.getElementById("combo-popup");
 const bonusBanner = document.getElementById("bonus-banner");
 const gameoverModal = document.getElementById("gameover-modal");
-
-const dangerLine = document.getElementById("danger-line");
 
 let gameState = {
     difficulty: "easy",
@@ -146,30 +145,7 @@ function startGame() {
     gameState.isRunning = true;
 
     updateHUD();
-
-        // Kunci posisi garis merah sebelum keyboard muncul (khusus HP)
-    dangerLine.style.position = "";
-    dangerLine.style.top = "";
-    dangerLine.style.bottom = "";
-    dangerLine.style.left = "";
-    dangerLine.style.width = "";
-
     switchPage("game");
-
-    if (window.matchMedia("(max-width: 600px)").matches) {
-        const posisiGaris = dangerLine.getBoundingClientRect().top;
-
-        dangerLine.style.position = "fixed";
-        dangerLine.style.top = `${posisiGaris}px`;
-        dangerLine.style.bottom = "auto";
-        dangerLine.style.left = "0";
-        dangerLine.style.width = "100%";
-    }
-
-    const tinggiArena = arena.clientHeight;
-    arena.style.height = `${tinggiArena}px`;
-    arena.style.flex = "0 0 auto";
-
     typingInput.value = "";
     typingInput.focus();
 
@@ -220,6 +196,7 @@ function scheduleNextWave(isFirstWave = false) {
     gameState.spawnTimers.push(waveTimer);
 }
 
+
 function spawnWord() {
     const text = getWord(gameState.difficulty, gameState.category);
     const el = document.createElement("div");
@@ -235,15 +212,24 @@ function spawnWord() {
 
     el.style.left = `${randomX}px`;
 
-    // Durasi jatuh sampai ke garis bawah sesuai kesulitan
+    // Durasi jatuh berdasarkan perangkat dan kesulitan
+    const isMobile = window.matchMedia("(max-width: 600px)").matches;
+
     let fallDurationSec;
+
     if (gameState.difficulty === "easy") {
-        fallDurationSec = randInt(4, 7); // 4 - 7 detik
+        fallDurationSec = isMobile ? randInt(10, 12) : randInt(8, 12);
+    } else if (gameState.difficulty === "medium") {
+        fallDurationSec = isMobile ? randInt(8, 10) : randInt(7, 8);
     } else {
-        fallDurationSec = randInt(3, 4); // 3 - 4 detik (Medium & Hard)
+        fallDurationSec = isMobile ? randInt(8, 10) : randInt(7, 8);
     }
 
-    const speedPxPerSec = (arenaHeight - 10) / fallDurationSec;
+    // Hitung jarak dari posisi awal sampai garis merah
+    const dangerY = dangerLine.offsetTop;
+    const jarakJatuh = dangerY + 35 - el.offsetHeight;
+
+    const speedPxPerSec = jarakJatuh / fallDurationSec;
 
     gameState.activeWords.push({
         id: Date.now() + Math.random(),
@@ -258,21 +244,23 @@ function spawnWord() {
     });
 }
 
+
 // Loop Animasi Turun
+
 function gameLoop(now) {
     if (!gameState.isRunning) return;
 
     const dt = (now - gameState.lastFrameTime) / 1000;
     gameState.lastFrameTime = now;
 
-    const dangerY = arena.clientHeight - 12;
+    const dangerY = dangerLine.offsetTop;
 
     for (let i = gameState.activeWords.length - 1; i >= 0; i--) {
         const wordObj = gameState.activeWords[i];
         wordObj.y += wordObj.speed * dt;
         wordObj.el.style.top = `${wordObj.y}px`;
 
-        // Cek apakah menyentuh garis batas bawah
+        // Cek apakah menyentuh garis batas
         if (wordObj.y + wordObj.el.offsetHeight >= dangerY) {
             handleWordMissed(i);
         }
