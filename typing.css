@@ -622,3 +622,18 @@ body {
         padding: 8px 10px;
     }
 }
+
+/* Menjaga tinggi arena saat keyboard HP muncul */
+@media screen and (max-width: 600px) {
+
+    #page-game {
+        height: 100vh;
+        height: 100dvh;
+    }
+
+    #game-arena {
+        flex: 1;
+        min-height: 0;
+    }
+
+}
