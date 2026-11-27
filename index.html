@@ -15,7 +15,10 @@
         <div class="center-box">
             <h1 class="game-title">TYPO<span>GAMES</span></h1>
             <p class="subtitle">Ketik kata yang jatuh sebelum menyentuh garis merah!</p>
-            <button id="btn-play" class="btn-primary pulse">PLAY</button>
+            <div class="home-actions">
+                <button id="btn-play" class="btn-primary pulse">PLAY</button>
+                <button id="btn-home-records" class="btn-outline">LIHAT SKOR & REKOR</button>
+            </div>
         </div>
     </section>
 
@@ -27,20 +30,24 @@
                 <button class="card-btn diff-btn" data-diff="easy">
                     <h3>EASY</h3>
                     <p>1 - 10 Huruf</p>
-                    <span>Jatuh: 4 - 7 detik</span>
+                    <span>Target Menang: 450 Poin</span>
                 </button>
                 <button class="card-btn diff-btn" data-diff="medium">
                     <h3>MEDIUM</h3>
                     <p>10 - 15 Huruf</p>
-                    <span>Jatuh: 3 - 4 detik</span>
+                    <span>Target Menang: 600 Poin</span>
                 </button>
                 <button class="card-btn diff-btn" data-diff="hard">
                     <h3>HARD</h3>
                     <p>15 - 20+ Huruf / Kalimat</p>
-                    <span>Jatuh: 3 - 4 detik</span>
+                    <span>Target Menang: 600 Poin</span>
                 </button>
             </div>
-            <button id="btn-back-home" class="btn-secondary">Kembali</button>
+
+            <div class="sub-actions">
+                <button id="btn-diff-records" class="btn-outline">Lihat Skor & Rekor</button>
+                <button id="btn-back-home" class="btn-secondary">Kembali</button>
+            </div>
         </div>
     </section>
 
@@ -59,16 +66,94 @@
         </div>
     </section>
 
-    <!-- HALAMAN 4: ARENA PERMAINAN -->
+    <!-- HALAMAN 3B: PILIH TARGET POIN MAKSIMAL -->
+    <section id="page-target" class="page">
+        <div class="center-box">
+            <h2>Pilih Target Poin Tamat</h2>
+            <p class="subtitle">
+                Mode: <strong id="target-summary-label">EASY • MAKANAN</strong>
+            </p>
+            <div class="card-grid target-grid">
+                <button class="card-btn target-btn" data-target="250">
+                    <h3>250</h3>
+                    <span>Target Poin</span>
+                </button>
+                <button class="card-btn target-btn" data-target="300">
+                    <h3>300</h3>
+                    <span>Target Poin</span>
+                </button>
+                <button class="card-btn target-btn" data-target="400">
+                    <h3>400</h3>
+                    <span>Target Poin</span>
+                </button>
+                <button class="card-btn target-btn" data-target="450">
+                    <h3>450</h3>
+                    <span>Default Easy</span>
+                </button>
+                <button class="card-btn target-btn" data-target="500">
+                    <h3>500</h3>
+                    <span>Target Poin</span>
+                </button>
+                <button class="card-btn target-btn" data-target="600">
+                    <h3>600</h3>
+                    <span>Default Med/Hard</span>
+                </button>
+                <button class="card-btn target-btn special" data-target="unlimited">
+                    <h3>UNLIMITED</h3>
+                    <span>Main sampai nyawa habis</span>
+                </button>
+            </div>
+            <button id="btn-back-category" class="btn-secondary">Ganti Kategori</button>
+        </div>
+    </section>
+
+    <!-- HALAMAN 4: HALAMAN REKOR & SKOR -->
+    <section id="page-records" class="page">
+        <div class="center-box records-box">
+            <h2>Papan Skor & Rekor</h2>
+            <p class="subtitle" id="best-score-banner">Skor Tertinggi: 0 Poin</p>
+
+            <div class="records-table-wrapper">
+                <table class="records-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Skor</th>
+                            <th>Mode & Kat</th>
+                            <th>Maks Target</th>
+                            <th>Grade</th>
+                            <th>Tanggal & Jam</th>
+                        </tr>
+                    </thead>
+                    <tbody id="records-tbody">
+                        <tr>
+                            <td colspan="6" class="empty-records">Belum ada riwayat skor tersimpan.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="sub-actions">
+                <button id="btn-clear-records" class="btn-danger-outline">Hapus Rekor</button>
+                <button id="btn-back-from-records" class="btn-secondary">Kembali ke Lobby</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- HALAMAN 5: ARENA PERMAINAN -->
     <section id="page-game" class="page">
         <header class="hud">
             <div class="hud-item">
                 <span>NYAWA</span>
-                <div id="lives-display" class="lives">❤️❤️❤️</div>
+                <div id="lives-display" class="lives">❤️❤️❤️🖤🖤</div>
             </div>
             <div class="hud-item">
                 <span>SKOR</span>
                 <div id="score-display" class="score">0</div>
+            </div>
+            <div class="hud-item">
+                <span>TARGET</span>
+                <div id="target-display" class="target-hud">450</div>
             </div>
             <div class="hud-item">
                 <span>COMBO</span>
@@ -79,7 +164,7 @@
         <!-- Arena Kata Jatuh -->
         <main id="game-arena">
             <div id="combo-popup" class="combo-popup"></div>
-            <div id="bonus-banner" class="bonus-banner">BONUS 100 POIN! SAPU BERSIH +1 NYAWA!</div>
+            <div id="bonus-banner" class="bonus-banner">BONUS COMBO! SAPU BERSIH +1 NYAWA!</div>
 
             <!-- Garis Batas Bawah -->
             <div id="danger-line">
@@ -94,16 +179,46 @@
         </footer>
     </section>
 
-    <!-- POPUP GAME OVER -->
+    <!-- POPUP GAME OVER (KALAH) -->
     <div id="gameover-modal" class="modal hidden">
-        <div class="modal-content">
+        <div class="modal-content lose-modal">
             <h2>GAME OVER</h2>
             <p>Semua nyawa telah habis!</p>
             <div class="final-stats">
                 <p>Skor Akhir: <strong id="final-score">0</strong></p>
+                <p>Target Maks: <strong id="lose-target-label">450</strong></p>
                 <p>Max Combo: <strong id="final-combo">0x</strong></p>
+                <p>Total Typo: <strong id="lose-typo-count">0</strong> kali</p>
+                <p>Pecah Nyawa: <strong id="lose-life-lost">0</strong> kali</p>
+                <p>Dapat Combo: <strong id="lose-combo-earned">0</strong> kali</p>
+                <p>Waktu Main: <strong id="lose-duration">0d</strong></p>
+                <p>Grade: <strong id="lose-grade" class="grade-badge">LOSE</strong></p>
             </div>
-            <button id="btn-restart-home" class="btn-primary">Kembali ke Halaman Utama</button>
+            <div class="modal-actions">
+                <button id="btn-retry-lose" class="btn-primary">Ulangi Game</button>
+                <button id="btn-lobby-lose" class="btn-secondary-modal">Kembali ke Lobby</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP WIN (MENANG) -->
+    <div id="win-modal" class="modal hidden">
+        <div class="modal-content win-modal">
+            <h2>KAMU MENANG!</h2>
+            <p id="win-subtitle">Target poin berhasil tercapai!</p>
+            <div class="final-stats">
+                <p>Skor Akhir: <strong id="win-score">0</strong></p>
+                <p>Target Maks: <strong id="win-target-label">450</strong></p>
+                <p>Nilai / Grade: <strong id="win-grade" class="grade-a-plus">A+</strong></p>
+                <p>Jumlah Typo: <strong id="win-typo-count">0</strong> kali</p>
+                <p>Pecah Nyawa: <strong id="win-life-lost">0</strong> kali</p>
+                <p>Berapa Kali Dapat Combo: <strong id="win-combo-earned">0</strong> kali</p>
+                <p>Waktu Menyelesaikan: <strong id="win-duration">0d</strong></p>
+            </div>
+            <div class="modal-actions">
+                <button id="btn-retry-win" class="btn-primary">Ulangi Game</button>
+                <button id="btn-lobby-win" class="btn-secondary-modal">Kembali ke Lobby</button>
+            </div>
         </div>
     </div>
 

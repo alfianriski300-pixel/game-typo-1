@@ -24,6 +24,7 @@ const WORD_BANK = {
 
 const RANDOM_ITEMS = ["apel", "jeruk", "mangga", "kucing", "harimau", "elang", "hiu", "panda", "naga", "pisang", "singa", "serigala"];
 const RANDOM_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*!?";
+const STORAGE_KEY = "typo_games_records_v1";
 
 function generateRandomMixedWord(difficulty) {
     let targetLen = difficulty === "easy" ? randInt(4, 10) : difficulty === "medium" ? randInt(10, 15) : randInt(16, 22);
@@ -32,11 +33,9 @@ function generateRandomMixedWord(difficulty) {
     while (result.length < targetLen) {
         const mode = Math.random();
         if (mode < 0.45) {
-            // Ambil nama buah/hewan acak
             const word = RANDOM_ITEMS[Math.floor(Math.random() * RANDOM_ITEMS.length)];
             result += (result.length > 0 && difficulty === "hard" ? " " : "") + word;
         } else {
-            // Tambah kombinasi huruf/angka/karakter acak
             const chunkLen = randInt(2, 5);
             for (let i = 0; i < chunkLen; i++) {
                 result += RANDOM_CHARS[Math.floor(Math.random() * RANDOM_CHARS.length)];
@@ -59,34 +58,177 @@ function randInt(min, max) {
 }
 
 // ==========================================
-// 2. STATE PERMAINAN & ELEMEN DOM
+// 2. LOCAL STORAGE & GRADE / NILAI
+// ==========================================
+function getRecords() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
+function saveRecords(records) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+}
+
+function getDefaultTargetForDifficulty(difficulty) {
+    return difficulty === "easy" ? 450 : 600;
+}
+
+/**
+ * Aturan Grade:
+ * - Menang / capai target poin maksimal -> "A+"
+ * - Jika pakai target poin (bukan unlimited):
+ *     >= 80% target -> "A"
+ *     >= 75% target -> "B"
+ *     >= 50% target -> "D/C"
+ *     < 50% target  -> "LOSE"
+ * - Jika Unlimited -> "UNLIMITED"
+ */
+function calculateGrade(score, targetScore, isWin) {
+    if (targetScore === null || targetScore === "unlimited") {
+        return { code: "UNLIMITED", cssClass: "grade-unlim" };
+    }
+
+    const numericTarget = Number(targetScore);
+    if (isWin || score >= numericTarget) {
+        return { code: "A+", cssClass: "grade-aplus" };
+    }
+
+    const ratio = numericTarget > 0 ? (score / numericTarget) * 100 : 0;
+
+    if (ratio >= 80) {
+        return { code: "A", cssClass: "grade-a" };
+    }
+    if (ratio >= 75) {
+        return { code: "B", cssClass: "grade-b" };
+    }
+    if (ratio >= 50) {
+        return { code: "D/C", cssClass: "grade-dc" };
+    }
+    return { code: "LOSE", cssClass: "grade-lose" };
+}
+
+function formatDateTime(date = new Date()) {
+    const pad = n => String(n).padStart(2, "0");
+    const tgl = `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
+    const jam = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    return `${tgl} ${jam}`;
+}
+
+function formatDuration(ms) {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const menit = Math.floor(totalSec / 60);
+    const detik = totalSec % 60;
+    if (menit > 0) {
+        return `${menit}m ${detik}d`;
+    }
+    return `${detik}d`;
+}
+
+function recordGameResult(isWin) {
+    const elapsedMs = performance.now() - gameState.startTime;
+    const gradeInfo = calculateGrade(gameState.score, gameState.targetScore, isWin);
+
+    const entry = {
+        id: Date.now() + Math.random(),
+        score: gameState.score,
+        difficulty: gameState.difficulty,
+        category: gameState.category,
+        targetScore: gameState.targetScore, // angka atau "unlimited"
+        grade: gradeInfo.code,
+        cssClass: gradeInfo.cssClass,
+        isWin,
+        typoCount: gameState.typoCount,
+        lifeLostCount: gameState.lifeLostCount,
+        comboEarnedCount: gameState.comboEarnedCount,
+        durationStr: formatDuration(elapsedMs),
+        dateTime: formatDateTime(new Date())
+    };
+
+    const records = getRecords();
+    records.unshift(entry);
+    // Simpan maksimal 50 riwayat terbaru
+    if (records.length > 50) {
+        records.length = 50;
+    }
+    saveRecords(records);
+    return entry;
+}
+
+function renderRecordsPage() {
+    const records = getRecords();
+    const tbody = document.getElementById("records-tbody");
+    const banner = document.getElementById("best-score-banner");
+
+    if (records.length === 0) {
+        banner.textContent = "Skor Tertinggi: 0 Poin";
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-records">Belum ada riwayat skor tersimpan.</td></tr>`;
+        return;
+    }
+
+    const bestEntry = [...records].sort((a, b) => b.score - a.score)[0];
+    banner.textContent = `Skor Tertinggi: ${bestEntry.score} Poin (${bestEntry.difficulty.toUpperCase()} • ${bestEntry.dateTime})`;
+
+    tbody.innerHTML = records
+        .map((rec, idx) => {
+            const targetLabel = rec.targetScore === "unlimited" ? "Unlimited" : `${rec.targetScore}`;
+            return `
+                <tr>
+                    <td>${idx + 1}</td>
+                    <td><strong>${rec.score}</strong></td>
+                    <td>${rec.difficulty.toUpperCase()} / ${rec.category}</td>
+                    <td>${targetLabel}</td>
+                    <td><span class="grade-pill ${rec.cssClass}">${rec.grade}</span></td>
+                    <td>${rec.dateTime}</td>
+                </tr>
+            `;
+        })
+        .join("");
+}
+
+// ==========================================
+// 3. STATE PERMAINAN & ELEMEN DOM
 // ==========================================
 const pages = {
     home: document.getElementById("page-home"),
     difficulty: document.getElementById("page-difficulty"),
     category: document.getElementById("page-category"),
+    target: document.getElementById("page-target"),
+    records: document.getElementById("page-records"),
     game: document.getElementById("page-game")
 };
 
 const arena = document.getElementById("game-arena");
+const dangerLine = document.getElementById("danger-line");
 const typingInput = document.getElementById("typing-input");
 const livesDisplay = document.getElementById("lives-display");
 const scoreDisplay = document.getElementById("score-display");
+const targetDisplay = document.getElementById("target-display");
 const comboDisplay = document.getElementById("combo-display");
 const comboPopup = document.getElementById("combo-popup");
 const bonusBanner = document.getElementById("bonus-banner");
 const gameoverModal = document.getElementById("gameover-modal");
+const winModal = document.getElementById("win-modal");
 
 let gameState = {
     difficulty: "easy",
     category: "makanan",
+    targetScore: 450, // angka atau "unlimited"
     lives: 3,
     score: 0,
     combo: 0,
     maxCombo: 0,
+    typoCount: 0,
+    lifeLostCount: 0,
+    comboEarnedCount: 0,
+    startTime: 0,
     nextBonusThreshold: 100,
     nextComboThresholdIncrease: 150,
-    activeWords: [], // { id, text, typedIndex, x, y, speed, el, spawnTime, hadTypo }
+    activeWords: [],
     isRunning: false,
     waveCount: 0,
     lastFrameTime: 0,
@@ -94,16 +236,33 @@ let gameState = {
 };
 
 // ==========================================
-// 3. NAVIGASI HALAMAN
+// 4. NAVIGASI HALAMAN
 // ==========================================
 function switchPage(pageName) {
     Object.values(pages).forEach(p => p.classList.remove("active"));
     pages[pageName].classList.add("active");
+    if (pageName === "records") {
+        renderRecordsPage();
+    }
+}
+
+function closeAllModals() {
+    gameoverModal.classList.add("hidden");
+    winModal.classList.add("hidden");
 }
 
 document.getElementById("btn-play").addEventListener("click", () => switchPage("difficulty"));
+document.getElementById("btn-home-records").addEventListener("click", () => switchPage("records"));
+document.getElementById("btn-diff-records").addEventListener("click", () => switchPage("records"));
+document.getElementById("btn-back-from-records").addEventListener("click", () => switchPage("home"));
 document.getElementById("btn-back-home").addEventListener("click", () => switchPage("home"));
 document.getElementById("btn-back-diff").addEventListener("click", () => switchPage("difficulty"));
+document.getElementById("btn-back-category").addEventListener("click", () => switchPage("category"));
+
+document.getElementById("btn-clear-records").addEventListener("click", () => {
+    localStorage.removeItem(STORAGE_KEY);
+    renderRecordsPage();
+});
 
 document.querySelectorAll(".diff-btn").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -116,27 +275,69 @@ document.querySelectorAll(".diff-btn").forEach(btn => {
 document.querySelectorAll(".cat-btn").forEach(btn => {
     btn.addEventListener("click", () => {
         gameState.category = btn.dataset.cat;
+        openTargetPage();
+    });
+});
+
+function openTargetPage() {
+    const defaultTarget = getDefaultTargetForDifficulty(gameState.difficulty);
+    document.getElementById("target-summary-label").textContent =
+        `${gameState.difficulty.toUpperCase()} • ${gameState.category.toUpperCase()}`;
+
+    document.querySelectorAll(".target-btn").forEach(btn => {
+        const val = btn.dataset.target;
+        btn.classList.toggle("recommended", Number(val) === defaultTarget);
+    });
+
+    switchPage("target");
+}
+
+document.querySelectorAll(".target-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const rawTarget = btn.dataset.target;
+        gameState.targetScore = rawTarget === "unlimited" ? "unlimited" : Number(rawTarget);
         startGame();
     });
 });
 
-document.getElementById("btn-restart-home").addEventListener("click", () => {
-    gameoverModal.classList.add("hidden");
+// Tombol di modal Game Over
+document.getElementById("btn-retry-lose").addEventListener("click", () => {
+    closeAllModals();
+    startGame();
+});
+
+document.getElementById("btn-lobby-lose").addEventListener("click", () => {
+    closeAllModals();
+    switchPage("home");
+});
+
+// Tombol di modal Win
+document.getElementById("btn-retry-win").addEventListener("click", () => {
+    closeAllModals();
+    startGame();
+});
+
+document.getElementById("btn-lobby-win").addEventListener("click", () => {
+    closeAllModals();
     switchPage("home");
 });
 
 // ==========================================
-// 4. LOGIKA UTAMA PERMAINAN
+// 5. LOGIKA UTAMA PERMAINAN
 // ==========================================
 function startGame() {
-    // Reset state
     clearAllTimers();
+    closeAllModals();
     document.querySelectorAll(".falling-word").forEach(el => el.remove());
 
     gameState.lives = 3;
     gameState.score = 0;
     gameState.combo = 0;
     gameState.maxCombo = 0;
+    gameState.typoCount = 0;
+    gameState.lifeLostCount = 0;
+    gameState.comboEarnedCount = 0;
+    gameState.startTime = performance.now();
     gameState.nextBonusThreshold = 100;
     gameState.nextComboThresholdIncrease = 150;
     gameState.activeWords = [];
@@ -148,7 +349,6 @@ function startGame() {
     typingInput.value = "";
     typingInput.focus();
 
-    // Mulai gelombang pertama (1 kata dulu)
     scheduleNextWave(true);
 
     gameState.lastFrameTime = performance.now();
@@ -160,7 +360,6 @@ function clearAllTimers() {
     gameState.spawnTimers = [];
 }
 
-// Sistem Gelombang (Wave) Berurutan dengan Jeda
 function scheduleNextWave(isFirstWave = false) {
     if (!gameState.isRunning) return;
 
@@ -169,15 +368,12 @@ function scheduleNextWave(isFirstWave = false) {
 
     if (!isFirstWave) {
         if (gameState.difficulty === "easy") {
-            // Awal 1, selanjutnya bisa 3 sampai 5 berurutan
             count = gameState.waveCount === 2 ? 3 : randInt(3, 5);
         } else {
-            // Medium & Hard bisa 5 sampai 7 berurutan
             count = gameState.waveCount === 2 ? 4 : randInt(5, 7);
         }
     }
 
-    // Jeda antar kata dalam satu gelombang agar tidak turun barengan
     const staggerDelay = gameState.difficulty === "easy" ? 1300 : gameState.difficulty === "medium" ? 1500 : 2100;
 
     for (let i = 0; i < count; i++) {
@@ -187,41 +383,6 @@ function scheduleNextWave(isFirstWave = false) {
         gameState.spawnTimers.push(timer);
     }
 
-    // Jadwalkan gelombang berikutnya setelah gelombang ini selesai muncul
-    const nextWaveDelay = count * staggerDelay + 1800;
-    const waveTimer = setTimeout(() => {
-        if (gameState.isRunning) scheduleNextWave(false);
-    }, nextWaveDelay);
-    gameState.spawnTimers.push(waveTimer);
-}
-
-function scheduleNextWave(isFirstWave = false) {
-    if (!gameState.isRunning) return;
-
-    gameState.waveCount++;
-    let count = 1;
-
-    if (!isFirstWave) {
-        if (gameState.difficulty === "easy") {
-            // Awal 1, selanjutnya bisa 3 sampai 5 berurutan
-            count = gameState.waveCount === 2 ? 3 : randInt(3, 5);
-        } else {
-            // Medium & Hard bisa 5 sampai 7 berurutan
-            count = gameState.waveCount === 2 ? 4 : randInt(5, 7);
-        }
-    }
-
-    // Jeda antar kata dalam satu gelombang agar tidak turun barengan
-    const staggerDelay = gameState.difficulty === "easy" ? 1300 : gameState.difficulty === "medium" ? 1500 : 2100;
-
-    for (let i = 0; i < count; i++) {
-        const timer = setTimeout(() => {
-            if (gameState.isRunning) spawnWord();
-        }, i * staggerDelay);
-        gameState.spawnTimers.push(timer);
-    }
-
-    // Jadwalkan gelombang berikutnya setelah gelombang ini selesai muncul
     const nextWaveDelay = count * staggerDelay + 1800;
     const waveTimer = setTimeout(() => {
         if (gameState.isRunning) scheduleNextWave(false);
@@ -237,16 +398,13 @@ function spawnWord() {
     arena.appendChild(el);
 
     const arenaWidth = arena.clientWidth;
-    const arenaHeight = arena.clientHeight;
     const wordWidth = el.offsetWidth || 120;
     const maxX = Math.max(20, arenaWidth - wordWidth - 30);
     const randomX = randInt(20, maxX);
 
     el.style.left = `${randomX}px`;
 
-    // Durasi jatuh berdasarkan perangkat dan kesulitan
     const isMobile = window.matchMedia("(max-width: 600px)").matches;
-
     let fallDurationSec;
 
     if (gameState.difficulty === "easy") {
@@ -257,10 +415,8 @@ function spawnWord() {
         fallDurationSec = isMobile ? randInt(8, 10) : randInt(7, 8);
     }
 
-    // Hitung jarak dari posisi awal sampai garis merah
     const dangerY = dangerLine.offsetTop;
     const jarakJatuh = dangerY + 35 - el.offsetHeight;
-
     const speedPxPerSec = jarakJatuh / fallDurationSec;
 
     gameState.activeWords.push({
@@ -276,8 +432,6 @@ function spawnWord() {
     });
 }
 
-// Loop Animasi Turun
-
 function gameLoop(now) {
     if (!gameState.isRunning) return;
 
@@ -291,13 +445,14 @@ function gameLoop(now) {
         wordObj.y += wordObj.speed * dt;
         wordObj.el.style.top = `${wordObj.y}px`;
 
-        // Cek apakah menyentuh garis batas
         if (wordObj.y + wordObj.el.offsetHeight >= dangerY) {
             handleWordMissed(i);
         }
     }
 
-    requestAnimationFrame(gameLoop);
+    if (gameState.isRunning) {
+        requestAnimationFrame(gameLoop);
+    }
 }
 
 function handleWordMissed(index) {
@@ -306,9 +461,9 @@ function handleWordMissed(index) {
     wordObj.el.remove();
     gameState.activeWords.splice(index, 1);
 
-    // Reset combo & kurangi 1 nyawa
     gameState.combo = 0;
     gameState.lives--;
+    gameState.lifeLostCount++;
     typingInput.value = "";
     updateHUD();
 
@@ -318,7 +473,7 @@ function handleWordMissed(index) {
 }
 
 // ==========================================
-// 5. DETEKSI KETIKAN, TYPO, COMBO & BONUS 100
+// 6. DETEKSI KETIKAN, TYPO, COMBO & POIN
 // ==========================================
 typingInput.addEventListener("input", () => {
     if (!gameState.isRunning) return;
@@ -329,40 +484,31 @@ typingInput.addEventListener("input", () => {
         return;
     }
 
-    // Cari kata aktif yang cocok dengan awal ketikan (prioritaskan yang paling bawah)
     const sortedWords = [...gameState.activeWords].sort((a, b) => b.y - a.y);
-    let matchedWord = sortedWords.find(w => w.text.startsWith(currentVal));
+    const matchedWord = sortedWords.find(w => w.text.startsWith(currentVal));
 
     if (matchedWord) {
         typingInput.classList.remove("input-error");
 
-        // Update highlight huruf yang sudah diketik pada kata yang cocok
         gameState.activeWords.forEach(w => {
-            if (w.id === matchedWord.id) {
-                w.typedIndex = currentVal.length;
-                updateWordHTML(w);
-            } else {
-                w.typedIndex = 0;
-                updateWordHTML(w);
-            }
+            w.typedIndex = w.id === matchedWord.id ? currentVal.length : 0;
+            updateWordHTML(w);
         });
 
-        // Cek jika kata selesai diketik 100%
         if (currentVal === matchedWord.text) {
             completeWord(matchedWord);
         }
     } else {
-        // TYPO TERDETEKSI!
         triggerTypoEffect(sortedWords[0]);
     }
 });
 
 function triggerTypoEffect(targetWord) {
+    gameState.typoCount++;
     typingInput.classList.add("input-error");
     gameState.combo = 0;
     updateHUD();
 
-    // Tandai kata paling dekat sedang typo & beri kedip merah tanpa henti turun
     if (targetWord) {
         targetWord.hadTypo = true;
         targetWord.el.classList.add("typo-flash");
@@ -371,7 +517,6 @@ function triggerTypoEffect(targetWord) {
         }, 220);
     }
 
-    // Hapus karakter terakhir yang salah agar user bisa langsung lanjut ketik tanpa ribet backspace
     typingInput.value = typingInput.value.slice(0, -1);
     setTimeout(() => typingInput.classList.remove("input-error"), 200);
 }
@@ -393,7 +538,6 @@ function completeWord(wordObj) {
     const idx = gameState.activeWords.findIndex(w => w.id === wordObj.id);
     if (idx === -1) return;
 
-    // Animasi pecah
     const centerX = wordObj.x + wordObj.el.offsetWidth / 2;
     const centerY = wordObj.y + wordObj.el.offsetHeight / 2;
     createExplosion(centerX, centerY, "#38bdf8");
@@ -403,7 +547,6 @@ function completeWord(wordObj) {
     typingInput.value = "";
     resetWordProgress();
 
-    // Hitung poin berdasarkan tingkat kesulitan, kecepatan, typo, dan panjang kata
     const elapsedSec = (performance.now() - wordObj.spawnTime) / 1000;
     const isFast = elapsedSec < 2.2;
     let earnedPoints;
@@ -417,11 +560,9 @@ function completeWord(wordObj) {
             earnedPoints = 15;
         }
     } else {
-        // Medium & Hard: poin normal 20–40 sesuai panjang kata
         const lengthBonus = Math.min(20, Math.floor(wordObj.text.length / 2));
         earnedPoints = 20 + lengthBonus;
 
-        // Mengetik cepat tanpa typo langsung mendapat 70 poin
         if (isFast && !wordObj.hadTypo) {
             earnedPoints = 70;
         }
@@ -429,10 +570,9 @@ function completeWord(wordObj) {
 
     gameState.score += earnedPoints;
 
-    // Combo didapat saat skor mencapai target bertahap:
-    // 100, 250, 450, 700, 1000, dan seterusnya.
     while (gameState.score >= gameState.nextBonusThreshold) {
         gameState.combo++;
+        gameState.comboEarnedCount++;
 
         if (gameState.combo > gameState.maxCombo) {
             gameState.maxCombo = gameState.combo;
@@ -443,12 +583,10 @@ function completeWord(wordObj) {
         gameState.nextBonusThreshold += gameState.nextComboThresholdIncrease;
         gameState.nextComboThresholdIncrease += 50;
 
-        // Setiap 3 combo berturut-turut menambah 1 nyawa (maksimal 5)
         if (gameState.combo > 0 && gameState.combo % 3 === 0) {
             if (gameState.lives < 5) {
                 gameState.lives++;
             }
-
             bonusBanner.classList.add("show");
             setTimeout(() => {
                 bonusBanner.classList.remove("show");
@@ -457,15 +595,20 @@ function completeWord(wordObj) {
     }
 
     updateHUD();
+
+    // Cek kemenangan jika bukan mode unlimited
+    if (gameState.targetScore !== "unlimited" && gameState.score >= Number(gameState.targetScore)) {
+        triggerWin();
+    }
 }
 
 // ==========================================
-// 6. EFEK VISUAL, BONUS 100 POIN & GAME OVER
+// 7. EFEK VISUAL, WIN & GAME OVER
 // ==========================================
 function showComboPopup(text) {
     comboPopup.textContent = text;
     comboPopup.classList.remove("show");
-    void comboPopup.offsetWidth; // trigger reflow agar animasi ulang
+    void comboPopup.offsetWidth;
     comboPopup.classList.add("show");
 }
 
@@ -490,14 +633,49 @@ function createExplosion(x, y, color) {
 function updateHUD() {
     livesDisplay.textContent = "❤️".repeat(Math.max(0, gameState.lives)) + "🖤".repeat(Math.max(0, 5 - gameState.lives));
     scoreDisplay.textContent = gameState.score;
+    targetDisplay.textContent = gameState.targetScore === "unlimited" ? "∞" : gameState.targetScore;
     comboDisplay.textContent = `${gameState.combo}x`;
+}
+
+function triggerWin() {
+    gameState.isRunning = false;
+    clearAllTimers();
+
+    const saved = recordGameResult(true);
+    const targetText = saved.targetScore === "unlimited" ? "Unlimited" : `${saved.targetScore} Poin`;
+
+    document.getElementById("win-subtitle").textContent =
+        `Target ${targetText} pada mode ${saved.difficulty.toUpperCase()} tercapai!`;
+    document.getElementById("win-score").textContent = saved.score;
+    document.getElementById("win-target-label").textContent = targetText;
+    document.getElementById("win-grade").textContent = saved.grade;
+    document.getElementById("win-typo-count").textContent = saved.typoCount;
+    document.getElementById("win-life-lost").textContent = saved.lifeLostCount;
+    document.getElementById("win-combo-earned").textContent = saved.comboEarnedCount;
+    document.getElementById("win-duration").textContent = saved.durationStr;
+
+    winModal.classList.remove("hidden");
 }
 
 function triggerGameOver() {
     gameState.isRunning = false;
     clearAllTimers();
-    document.getElementById("final-score").textContent = gameState.score;
+
+    const saved = recordGameResult(false);
+    const targetText = saved.targetScore === "unlimited" ? "Unlimited" : `${saved.targetScore} Poin`;
+    const gradeEl = document.getElementById("lose-grade");
+
+    document.getElementById("final-score").textContent = saved.score;
+    document.getElementById("lose-target-label").textContent = targetText;
     document.getElementById("final-combo").textContent = `${gameState.maxCombo}x`;
+    document.getElementById("lose-typo-count").textContent = saved.typoCount;
+    document.getElementById("lose-life-lost").textContent = saved.lifeLostCount;
+    document.getElementById("lose-combo-earned").textContent = saved.comboEarnedCount;
+    document.getElementById("lose-duration").textContent = saved.durationStr;
+
+    gradeEl.textContent = saved.grade;
+    gradeEl.className = `grade-pill ${saved.cssClass}`;
+
     gameoverModal.classList.remove("hidden");
 }
 
@@ -505,7 +683,6 @@ function escapeHTML(str) {
     return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-// Pastikan input selalu fokus selama game berjalan
 arena.addEventListener("click", () => {
     if (gameState.isRunning) typingInput.focus();
 });
