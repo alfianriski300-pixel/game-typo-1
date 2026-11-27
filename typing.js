@@ -144,7 +144,17 @@ function startGame() {
     gameState.isRunning = true;
 
     updateHUD();
+
+    // Kunci tinggi arena sebelum keyboard muncul
+    arena.style.height = "";
+    arena.style.flex = "";
+
     switchPage("game");
+
+    const tinggiArena = arena.clientHeight;
+    arena.style.height = `${tinggiArena}px`;
+    arena.style.flex = "0 0 auto";
+
     typingInput.value = "";
     typingInput.focus();
 
