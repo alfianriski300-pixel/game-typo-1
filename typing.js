@@ -1,28 +1,36 @@
-// ==========================================
-// 1. DATABASE KATA & GENERATOR ACAK
-// ==========================================
 const WORD_BANK = {
     easy: {
-        makanan: ["sate", "bakso", "soto", "rendang", "tempe", "tahu", "seblak", "pempek", "gudeg", "rawon", "lontong", "ketoprak", "martabak", "siomay"],
-        minuman: ["kopi", "teh", "susu", "sirup", "cendol", "dawet", "bajigur", "bandrek", "jus", "air", "soda", "matcha", "latte", "boba"],
-        wilayah: ["jakarta", "bandung", "medan", "riau", "bali", "papua", "aceh", "solo", "bogor", "depok", "malang", "padang", "batam", "jambi"],
-        nama: ["budi", "siti", "andi", "rizki", "putri", "dewi", "agus", "fajar", "nina", "dimas", "tari", "eka", "indah", "alfian"]
+        makanan: [
+            "sate", "bakso", "soto", "rendang", "tempe", "tahu", "seblak", "pempek", "gudeg", "rawon", "lontong", "ketoprak", "martabak", "siomay", "nasi", "ayam", "mie", "telur", "ikan", "udang", "cumi", "kerupuk", "cilok", "cimol", "batagor", "dimsum", "risol", "lemper", "klepon", "onde", "serabi", "bika", "dodol", "wajik"
+        ],
+        minuman: [
+            "kopi", "teh", "susu", "sirup", "cendol", "dawet", "bajigur", "bandrek", "jus", "air", "soda", "matcha", "latte", "boba",
+            "es", "jahe", "kelapa", "alpukat", "mangga", "jeruk", "jambu", "melon", "leci", "anggur", "cincau", "sekoteng", "wedang", "madu", "kunyit", "asam", "apel", "melon", "santan", "sereh"
+        ],
+        wilayah: [
+            "jakarta", "bandung", "medan", "riau", "bali", "papua", "aceh", "solo", "bogor", "depok", "malang", "padang", "batam", "jambi",
+            "bekasi", "tangerang", "cirebon", "surabaya", "semarang", "jogja", "kediri", "madiun", "palembang", "lampung", "bengkulu", "gorontalo", "manado", "kupang", "ambon", "sorong", "bima", "mataram", "denpasar", "pontianak"
+        ],
+        nama: [
+            "budi", "siti", "andi", "rizki", "putri", "dewi", "agus", "fajar", "nina", "dimas", "tari", "eka", "indah", "alfian",
+            "rani", "riko", "rama", "sinta", "bima", "arka", "nadia", "fitri", "rina", "joko", "wahyu", "bayu", "sari", "lina", "maya", "tono", "rudi", "ani", "yudi", "dedi"
+        ]
     },
     medium: {
-        makanan: ["nasi goreng", "ayam geprek", "mie ayam bakso", "sate padang", "ikan bakar", "bubur ayam", "kerak telor", "opor ayam", "pecel lele"],
-        minuman: ["es teh manis", "kopi susu gula", "es kelapa muda", "jus alpukat", "es campur buah", "wedang jahe", "es cendol dawet", "cokelat panas"],
-        wilayah: ["pekanbaru riau", "yogyakarta", "kalimantan", "sulawesi utara", "sumatera barat", "jawa tengah", "lombok timur", "raja ampat"],
-        nama: ["muhammad rizki", "putri ayu sari", "ahmad fauzan", "siti nurhaliza", "budi santoso", "dimas anggara", "citra kirana", "alfian riski"]
+        makanan: ["nasi goreng", "ayam geprek", "mie ayam bakso", "sate padang", "ikan bakar", "bubur ayam", "kerak telor", "opor ayam", "pecel lele", "ayam bakar", "soto betawi", "mie goreng", "gado gado", "nasi uduk", "ayam penyet", "sate ayam", "bakso urat", "nasi kuning", "tahu goreng"],
+        minuman: ["es teh manis", "kopi susu gula", "es kelapa muda", "jus alpukat", "es campur buah", "wedang jahe", "es cendol dawet", "cokelat panas", "es buah segar", "kopi hitam", "teh tarik", "jus jambu", "es jeruk manis", "susu cokelat", "kopi tubruk", "es susu soda", "teh melati", "jus mangga"],
+        wilayah: ["pekanbaru riau", "yogyakarta", "kalimantan", "sulawesi utara", "sumatera barat", "jawa tengah", "lombok timur", "raja ampat", "jawa barat", "sumatera utara", "bali utara", "papua barat", "aceh besar", "nusa tenggara", "sulawesi tengah", "maluku utara", "bangka belitung", "kepulauan riau"],
+        nama: ["muhammad rizki", "putri ayu sari", "ahmad fauzan", "siti nurhaliza", "budi santoso", "dimas anggara", "citra kirana", "alfian riski", "rizki pratama", "ayu lestari", "fauzan ramadhan", "dewi sartika", "andi wijaya", "nina kartika", "agus setiawan", "rara anindita", "bayu saputra", "maya anggraini"]
     },
     hard: {
-        makanan: ["nasi goreng spesial pedas", "rendang daging sapi padang", "martabak manis keju coklat", "sate kambing bumbu kecap", "pempek kapal selam palembang"],
-        minuman: ["es kopi susu gula aren dingin", "jus mangga harum manis segar", "es teler durian alpukat kelapa", "wedang ronde jahe hangat malam"],
-        wilayah: ["daerah istimewa yogyakarta", "kepulauan bangka belitung", "provinsi kalimantan timur", "kota pekanbaru provinsi riau", "nusa tenggara timur indonesia"],
-        nama: ["muhammad alfian riski pratama", "putri cahaya purnama sari", "alexander graham bell junior", "raden ajeng kartini jepara"]
+        makanan: ["nasi goreng spesial pedas", "rendang daging sapi padang", "martabak manis keju coklat", "sate kambing bumbu kecap", "pempek kapal selam palembang", "ayam goreng kalasan pedas", "soto ayam lamongan spesial", "nasi padang rendang sapi", "mie aceh kepiting kuah pedas", "bebek goreng sambal ijo pedas", "ikan gurame bakar madu pedas", "sate ayam madura bumbu kacang", "tahu tek telur surabaya enak", "lontong sayur padang spesial", "nasi liwet solo sambal teri"],
+        minuman: ["es kopi susu gula aren dingin", "jus mangga harum manis segar", "es teler durian alpukat kelapa", "wedang ronde jahe hangat malam", "es kopi aren susu segar dingin", "jus jambu biji merah segar", "es teh tarik susu kental manis", "kopi susu aren hangat malam", "wedang uwuh jahe gula batu", "es kelapa muda gula merah", "jus alpukat cokelat susu keju", "es buah naga sirup gula batu", "teh bunga telang lemon madu", "es cendol gula aren santan"],
+        wilayah: ["daerah istimewa yogyakarta", "kepulauan bangka belitung", "provinsi kalimantan timur", "kota pekanbaru provinsi riau", "nusa tenggara timur indonesia", "provinsi sumatera utara medan", "kota surabaya jawa timur indah", "kabupaten bogor jawa barat", "provinsi bali pulau dewata", "kota bandung jawa barat sejuk", "kepulauan maluku utara ternate", "provinsi jambi sumatera tengah", "kota makassar sulawesi selatan", "kabupaten garut jawa barat", "daerah bekasi jawa barat raya"],
+        nama: ["muhammad ahmad saputra pratama", "putri cahaya purnama sari", "alexander graham bell junior", "raden ajeng kartini jepara", "muhammad fajar ramadhan putra", "siti aisyah putri ramadhani", "budi setiawan nugroho jaya", "dewi lestari anggraini putri", "ahmad syafiq maulana pratama", "rina wati kusuma dewi sari", "dimas aryaputra wijaya kusuma", "putri anisa rahmawati indah", "rizky aditya nugraha pratama", "andini prameswari citra kirana"]
     }
 };
 
-const RANDOM_ITEMS = ["apel", "jeruk", "mangga", "kucing", "harimau", "elang", "hiu", "panda", "naga", "pisang", "singa", "serigala"];
+const RANDOM_ITEMS = ["apel", "jeruk", "mangga", "kucing", "harimau", "elang", "hiu", "panda", "naga", "pisang", "singa", "serigala", "anggur", "melon", "durian", "kelapa", "semangka", "stroberi", "gajah", "kuda", "sapi", "kambing", "ayam", "bebek", "monyet", "ular", "buaya", "kelinci", "rubah", "beruang"];
 const RANDOM_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*!?";
 const STORAGE_KEY = "typo_games_records_v1";
 
@@ -226,8 +234,8 @@ let gameState = {
     lifeLostCount: 0,
     comboEarnedCount: 0,
     startTime: 0,
-    nextBonusThreshold: 100,
-    nextComboThresholdIncrease: 150,
+    nextBonusThreshold: 170,
+    nextComboThresholdIncrease: 70,
     activeWords: [],
     isRunning: false,
     waveCount: 0,
@@ -338,8 +346,8 @@ function startGame() {
     gameState.lifeLostCount = 0;
     gameState.comboEarnedCount = 0;
     gameState.startTime = performance.now();
-    gameState.nextBonusThreshold = 100;
-    gameState.nextComboThresholdIncrease = 150;
+    gameState.nextBonusThreshold = 170;
+    gameState.nextComboThresholdIncrease = 70;
     gameState.activeWords = [];
     gameState.waveCount = 0;
     gameState.isRunning = true;
@@ -410,9 +418,9 @@ function spawnWord() {
     if (gameState.difficulty === "easy") {
         fallDurationSec = isMobile ? randInt(10, 12) : randInt(8, 12);
     } else if (gameState.difficulty === "medium") {
-        fallDurationSec = isMobile ? randInt(8, 10) : randInt(7, 8);
+        fallDurationSec = isMobile ? randInt(12, 15) : randInt(10, 12);
     } else {
-        fallDurationSec = isMobile ? randInt(8, 10) : randInt(7, 8);
+        fallDurationSec = isMobile ? randInt(16, 20) : randInt(12, 14);
     }
 
     const dangerY = dangerLine.offsetTop;
@@ -528,6 +536,22 @@ function resetWordProgress() {
     });
 }
 
+function clearAllFallingWords() {
+    gameState.activeWords.forEach(wordObj => {
+        const centerX = wordObj.x + wordObj.el.offsetWidth / 2;
+        const centerY = wordObj.y + wordObj.el.offsetHeight / 2;
+
+        createExplosion(centerX, centerY, "#38bdf8");
+        wordObj.el.remove();
+    });
+
+    gameState.activeWords = [];
+
+    // Bersihkan input dan progres ketikan
+    typingInput.value = "";
+    resetWordProgress();
+}
+
 function updateWordHTML(wordObj) {
     const typedPart = escapeHTML(wordObj.text.slice(0, wordObj.typedIndex));
     const untypedPart = escapeHTML(wordObj.text.slice(wordObj.typedIndex));
@@ -553,18 +577,18 @@ function completeWord(wordObj) {
 
     if (gameState.difficulty === "easy") {
         if (isFast && !wordObj.hadTypo) {
-            earnedPoints = 25;
-        } else if (wordObj.hadTypo) {
-            earnedPoints = 20;
-        } else {
             earnedPoints = 15;
+        } else if (wordObj.hadTypo) {
+            earnedPoints = 10;
+        } else {
+            earnedPoints = 5;
         }
     } else {
         const lengthBonus = Math.min(20, Math.floor(wordObj.text.length / 2));
         earnedPoints = 20 + lengthBonus;
 
         if (isFast && !wordObj.hadTypo) {
-            earnedPoints = 70;
+            earnedPoints = 25;
         }
     }
 
@@ -579,6 +603,7 @@ function completeWord(wordObj) {
         }
 
         showComboPopup(`${gameState.combo}x COMBO!`);
+        clearAllFallingWords();
 
         gameState.nextBonusThreshold += gameState.nextComboThresholdIncrease;
         gameState.nextComboThresholdIncrease += 50;
